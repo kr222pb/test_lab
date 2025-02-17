@@ -1,13 +1,13 @@
-function init() {
+document.addEventListener("DOMContentLoaded", function () {
     const button = document.querySelector("#startBtn");
+
     if (button) {
         button.addEventListener("click", requestPermission);
+        console.log("Knappen hittad och eventlyssnare tillagd!");
     } else {
-        console.error("Knappen #startBtn hittades inte!");
+        console.error("❌ Knappen #startBtn hittades inte! Kontrollera att den finns i HTML.");
     }
-}
-
-window.addEventListener("load", init);
+});
 
 function requestPermission() {
     if (typeof DeviceMotionEvent.requestPermission === "function") {
@@ -21,8 +21,7 @@ function requestPermission() {
             })
             .catch(console.error);
     } else {
-        // Om det inte är en iOS-enhet, starta direkt
-        startGyro();
+        startGyro(); // Om det inte är iOS, starta direkt
     }
 }
 
@@ -31,15 +30,11 @@ function startGyro() {
         let sensor = new Gyroscope({ frequency: 60 });
 
         sensor.addEventListener("reading", () => {
-            let x = sensor.x.toFixed(2);
-            let y = sensor.y.toFixed(2);
-            let z = sensor.z.toFixed(2);
+            document.getElementById("x").textContent = sensor.x.toFixed(2);
+            document.getElementById("y").textContent = sensor.y.toFixed(2);
+            document.getElementById("z").textContent = sensor.z.toFixed(2);
 
-            document.getElementById("x").textContent = x;
-            document.getElementById("y").textContent = y;
-            document.getElementById("z").textContent = z;
-
-            console.log(`X: ${x}, Y: ${y}, Z: ${z}`);
+            console.log(`X: ${sensor.x}, Y: ${sensor.y}, Z: ${sensor.z}`);
         });
 
         sensor.start();
