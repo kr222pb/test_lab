@@ -1,19 +1,19 @@
-document.addEventListener("DOMContentLoaded", function () {
+function init() {
     const button = document.querySelector("#startBtn");
-
     if (button) {
         button.addEventListener("click", requestPermission);
-        console.log("Knappen hittad och eventlyssnare tillagd!");
     } else {
-        console.error("❌ Knappen #startBtn hittades inte! Kontrollera att den finns i HTML.");
+        console.error("Knappen #startBtn hittades inte!");
     }
-});
+}
+
+window.addEventListener("load", init);
 
 function requestPermission() {
-    if (typeof DeviceMotionEvent.requestPermission === "function") {
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
         DeviceMotionEvent.requestPermission()
             .then(permissionState => {
-                if (permissionState === "granted") {
+                if (permissionState === 'granted') {
                     startGyro();
                 } else {
                     alert("Tillstånd nekades. Gyroskop fungerar inte.");
@@ -21,20 +21,25 @@ function requestPermission() {
             })
             .catch(console.error);
     } else {
-        startGyro(); // Om det inte är iOS, starta direkt
+        startGyro();
     }
 }
+
 
 function startGyro() {
     if ("Gyroscope" in window) {
         let sensor = new Gyroscope({ frequency: 60 });
 
         sensor.addEventListener("reading", () => {
-            document.getElementById("x").textContent = sensor.x.toFixed(2);
-            document.getElementById("y").textContent = sensor.y.toFixed(2);
-            document.getElementById("z").textContent = sensor.z.toFixed(2);
+            let x = sensor.x.toFixed(2);
+            let y = sensor.y.toFixed(2);
+            let z = sensor.z.toFixed(2);
 
-            console.log(`X: ${sensor.x}, Y: ${sensor.y}, Z: ${sensor.z}`);
+            document.getElementById("x").textContent = x;
+            document.getElementById("y").textContent = y;
+            document.getElementById("z").textContent = z;
+
+            console.log(`X: ${x}, Y: ${y}, Z: ${z}`);
         });
 
         sensor.start();
