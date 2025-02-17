@@ -31,26 +31,9 @@
     <p>Beta: <span id="beta">0</span></p>
     <p>Gamma: <span id="gamma">0</span></p>
     <div id="box"></div>
-    <button onclick="requestPermission()">Starta sensorer</button>
+    <button onclick="startGyro()">Starta sensorer</button>
 
     <script>
-        function requestPermission() {
-            if (typeof DeviceMotionEvent.requestPermission === 'function') {
-                DeviceMotionEvent.requestPermission()
-                    .then(permissionState => {
-                        if (permissionState === 'granted') {
-                            startGyro();
-                        } else {
-                            alert("Tillstånd nekades. Gyroskop fungerar inte.");
-                        }
-                    })
-                    .catch(console.error);
-            } else {
-                // Om det inte är en iOS-enhet, starta direkt
-                startGyro();
-            }
-        }
-
         function startGyro() {
             if (window.DeviceOrientationEvent) {
                 window.addEventListener("deviceorientation", event => {
@@ -71,6 +54,9 @@
                 alert("Din enhet stöder inte DeviceOrientationEvent.");
             }
         }
+
+        // Försök starta automatiskt om det är möjligt
+        startGyro();
     </script>
 </body>
 </html>
