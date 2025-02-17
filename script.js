@@ -1,55 +1,40 @@
-let watchId = null;
-let updateCounter = 0;
-let lastLat = null, lastLng = null;
+let gamepadIndex = null;
 
-// Haversine-formeln: Beräkna avstånd mellan två koordinater (i meter)
-function calculateDistance(lat1, lng1, lat2, lng2) {
-    const R = 6371e3; // Jordens radie i meter
-    const φ1 = lat1 * (Math.PI / 180);
-    const φ2 = lat2 * (Math.PI / 180);
-    const Δφ = (lat2 - lat1) * (Math.PI / 180);
-    const Δλ = (lng2 - lng1) * (Math.PI / 180);
+// Lyssna på när en gamepad ansluts
+window.addEventListener("gamepadconnected", (event) => {
+    gamepadIndex = event.gamepad.index;
+    document.getElementById("status").textContent = `Gamepad ansluten: ${event.gamepad.id}`;
+    updateGamepad();
+});
 
-    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+// Lyssna på när en gamepad kopplas bort
+window.addEventListener("gamepaddisconnected", () => {
+    document.getElementById("status").textContent = "Gamepad frånkopplad.";
+    document.getElementById("gamepadInfo").textContent = "Ingen gamepad upptäckt";
+    gamepadIndex = null;
+});
 
-    return R * c; // Avstånd i meter
-}
+// Funktion som uppdaterar gamepad-data varje frame
+function updateGamepad() {
+    if (gamepadIndex === null) return; // Om ingen gamepad är ansluten, avsluta
 
-// Starta realtidsspårning och räkna uppdateringar
-function startTracking() {
-    if ("geolocation" in navigator) {
-        watchId = navigator.geolocation.watchPosition(position => {
-            let lat = position.coords.latitude;
-            let lng = position.coords.longitude;
-            let accuracy = position.coords.accuracy;
+    let gamepads = navigator.getGamepads();
+    let gp = gamepads[gamepadIndex];
 
-            updateCounter++;
-            document.getElementById("updateCount").textContent = updateCounter;
-            document.getElementById("lat").textContent = lat.toFixed(6);
-            document.getElementById("lng").textContent = lng.toFixed(6);
+    if (gp) {
+        let info = `ID: ${gp.id}\n\nKnappstatus:\n`;
 
-            let distanceMoved = lastLat !== null ? calculateDistance(lastLat, lastLng, lat, lng).toFixed(2) : "0";
-            console.log(`Uppdatering #${updateCounter}: Lat: ${lat}, Long: ${lng}, Precision: ${accuracy.toFixed(2)}m, Flyttad: ${distanceMoved}m`);
+        // Loopar genom alla knappar
+        for (let i = 0; i < gp.buttons.length; i++) {
+            info += `Knapp ${i}: ${gp.buttons[i].pressed ? "TRYCKT" : "Släppt"}\n`;
+        }
 
-            document.getElementById("status").textContent = `Spårning pågår... (Senast flyttad: ${distanceMoved} m)`;
+        // Loopar genom alla axlar (joysticks)
+        info += `\nJoystick (vänster): X=${gp.axes[0].toFixed(2)}, Y=${gp.axes[1].toFixed(2)}\n`;
+        info += `Joystick (höger): X=${gp.axes[2].toFixed(2)}, Y=${gp.axes[3].toFixed(2)}\n`;
 
-            lastLat = lat;
-            lastLng = lng;
-        }, error => {
-            alert("Kunde inte spåra position: " + error.message);
-        }, { enableHighAccuracy: true });
+        document.getElementById("gamepadInfo").textContent = info;
     }
-}
 
-// Stoppa spårning
-function stopTracking() {
-    if (watchId !== null) {
-        navigator.geolocation.clearWatch(watchId);
-        watchId = null;
-        document.getElementById("status").textContent = "Spårning stoppad.";
-        console.log("Spårning stoppad.");
-    }
+    requestAnimationFrame(updateGamepad); // Anropa funktionen igen nästa frame
 }
