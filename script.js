@@ -25,15 +25,12 @@ function requestPermission() {
     }
 }
 
-
 function startGyro() {
-    if ("Gyroscope" in window) {
-        let sensor = new Gyroscope({ frequency: 60 });
-
-        sensor.addEventListener("reading", () => {
-            let x = sensor.x.toFixed(2);
-            let y = sensor.y.toFixed(2);
-            let z = sensor.z.toFixed(2);
+    if (window.DeviceOrientationEvent) {
+        window.addEventListener("deviceorientation", event => {
+            let x = event.beta !== null ? event.beta.toFixed(2) : "N/A"; // X - Framåt/Bakåt
+            let y = event.gamma !== null ? event.gamma.toFixed(2) : "N/A"; // Y - Vänster/Höger
+            let z = event.alpha !== null ? event.alpha.toFixed(2) : "N/A"; // Z - Rotation (Kompass)
 
             document.getElementById("x").textContent = x;
             document.getElementById("y").textContent = y;
@@ -41,9 +38,8 @@ function startGyro() {
 
             console.log(`X: ${x}, Y: ${y}, Z: ${z}`);
         });
-
-        sensor.start();
     } else {
-        alert("Gyroskop API stöds inte i denna webbläsare.");
+        alert("DeviceOrientation API stöds inte i denna webbläsare.");
     }
 }
+
