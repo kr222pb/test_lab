@@ -1,60 +1,46 @@
 let watchId = null;
-let startCounter = 0;
-let stopCounter = 0;
-let map, marker;
+let updateCounter = 0;
+let lastLat = null, lastLng = null;
 
-// Initiera kartan vid första platsuppdatering
-function initMap(lat, lng) {
-    if (!map) {
-        map = L.map('map').setView([lat, lng], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        marker = L.marker([lat, lng]).addTo(map).bindPopup("Din plats").openPopup();
-    } else {
-        marker.setLatLng([lat, lng]);
-        map.setView([lat, lng], 15);
-    }
+// Haversine-formeln: Beräkna avstånd mellan två koordinater (i meter)
+function calculateDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371e3; // Jordens radie i meter
+    const φ1 = lat1 * (Math.PI / 180);
+    const φ2 = lat2 * (Math.PI / 180);
+    const Δφ = (lat2 - lat1) * (Math.PI / 180);
+    const Δλ = (lng2 - lng1) * (Math.PI / 180);
+
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // Avstånd i meter
 }
 
-// Hämta enstaka position
-function getLocation() {
-    if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(position => {
-            let lat = position.coords.latitude;
-            let lng = position.coords.longitude;
-            
-            document.getElementById("lat").textContent = lat.toFixed(6);
-            document.getElementById("lng").textContent = lng.toFixed(6);
-            document.getElementById("status").textContent = "Senast hämtade position visas.";
-
-            console.log("Hämtad position:", lat, lng);
-            initMap(lat, lng); // Uppdatera kartan
-        }, error => {
-            alert("Kunde inte hämta position: " + error.message);
-        });
-    } else {
-        alert("Geolocation stöds inte av din webbläsare.");
-    }
-}
-
-// Starta spårning
+// Starta realtidsspårning och räkna uppdateringar
 function startTracking() {
     if ("geolocation" in navigator) {
         watchId = navigator.geolocation.watchPosition(position => {
             let lat = position.coords.latitude;
             let lng = position.coords.longitude;
+            let accuracy = position.coords.accuracy;
 
+            updateCounter++;
+            document.getElementById("updateCount").textContent = updateCounter;
             document.getElementById("lat").textContent = lat.toFixed(6);
             document.getElementById("lng").textContent = lng.toFixed(6);
-            document.getElementById("status").textContent = "Spårning pågår...";
 
-            console.log("Spårning pågår...", lat, lng);
-            initMap(lat, lng); // Uppdatera kartan i realtid
-        });
+            let distanceMoved = lastLat !== null ? calculateDistance(lastLat, lastLng, lat, lng).toFixed(2) : "0";
+            console.log(`Uppdatering #${updateCounter}: Lat: ${lat}, Long: ${lng}, Precision: ${accuracy.toFixed(2)}m, Flyttad: ${distanceMoved}m`);
 
-        startCounter++;
-        document.getElementById("startCount").textContent = startCounter;
-    } else {
-        alert("Geolocation stöds inte av din webbläsare.");
+            document.getElementById("status").textContent = `Spårning pågår... (Senast flyttad: ${distanceMoved} m)`;
+
+            lastLat = lat;
+            lastLng = lng;
+        }, error => {
+            alert("Kunde inte spåra position: " + error.message);
+        }, { enableHighAccuracy: true });
     }
 }
 
@@ -63,11 +49,7 @@ function stopTracking() {
     if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
-        
-        stopCounter++;
-        document.getElementById("stopCount").textContent = stopCounter;
         document.getElementById("status").textContent = "Spårning stoppad.";
-
         console.log("Spårning stoppad.");
     }
 }
