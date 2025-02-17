@@ -5,8 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gyroskop Test</title>
     <style>
-        body { text-align: center; font-family: Arial, sans-serif; margin: 50px; }
-        #box { width: 100px; height: 100px; background: red; position: relative; margin: auto; }
+        body { 
+            text-align: center; 
+            font-family: Arial, sans-serif; 
+            margin: 50px; 
+        }
+        #box { 
+            width: 100px; 
+            height: 100px; 
+            background: red; 
+            position: relative; 
+            margin: auto; 
+            transition: transform 0.1s linear; 
+        }
+        button {
+            padding: 10px;
+            margin-top: 20px;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -15,20 +31,45 @@
     <p>Beta: <span id="beta">0</span></p>
     <p>Gamma: <span id="gamma">0</span></p>
     <div id="box"></div>
+    <button onclick="requestPermission()">Starta sensorer</button>
 
     <script>
-        if (window.DeviceOrientationEvent) {
-            window.addEventListener("deviceorientation", event => {
-                document.getElementById('alpha').textContent = event.alpha.toFixed(2);
-                document.getElementById('beta').textContent = event.beta.toFixed(2);
-                document.getElementById('gamma').textContent = event.gamma.toFixed(2);
+        function requestPermission() {
+            if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                DeviceMotionEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            startGyro();
+                        } else {
+                            alert("Tillstånd nekades. Gyroskop fungerar inte.");
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                // Om det inte är en iOS-enhet, starta direkt
+                startGyro();
+            }
+        }
 
-                // Rör en ruta baserat på telefonens lutning
-                let box = document.getElementById("box");
-                box.style.transform = `rotate(${event.gamma}deg) translateY(${event.beta}px)`;
-            });
-        } else {
-            alert("Din enhet stöder inte DeviceOrientationEvent.");
+        function startGyro() {
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener("deviceorientation", event => {
+                    // Kontrollera om data är null, annars visa "N/A"
+                    let alpha = event.alpha !== null ? event.alpha.toFixed(2) : "N/A";
+                    let beta = event.beta !== null ? event.beta.toFixed(2) : "N/A";
+                    let gamma = event.gamma !== null ? event.gamma.toFixed(2) : "N/A";
+
+                    document.getElementById('alpha').textContent = alpha;
+                    document.getElementById('beta').textContent = beta;
+                    document.getElementById('gamma').textContent = gamma;
+
+                    // Rör en ruta baserat på telefonens lutning
+                    let box = document.getElementById("box");
+                    box.style.transform = `rotate(${gamma}deg) translateY(${beta}px)`;
+                });
+            } else {
+                alert("Din enhet stöder inte DeviceOrientationEvent.");
+            }
         }
     </script>
 </body>
