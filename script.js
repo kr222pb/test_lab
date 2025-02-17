@@ -26,20 +26,35 @@ function requestPermission() {
 }
 
 function startGyro() {
-    if (window.DeviceOrientationEvent) {
-        window.addEventListener("deviceorientation", event => {
-            let x = event.beta !== null ? event.beta.toFixed(2) : "N/A"; // X - Framåt/Bakåt
-            let y = event.gamma !== null ? event.gamma.toFixed(2) : "N/A"; // Y - Vänster/Höger
-            let z = event.alpha !== null ? event.alpha.toFixed(2) : "N/A"; // Z - Rotation (Kompass)
+    if ("Gyroscope" in window) {
+        try {
+            let sensor = new Gyroscope({ frequency: 60 });
 
-            document.getElementById("x").textContent = x;
-            document.getElementById("y").textContent = y;
-            document.getElementById("z").textContent = z;
+            sensor.addEventListener("reading", () => {
+                let x = sensor.x.toFixed(2);
+                let y = sensor.y.toFixed(2);
+                let z = sensor.z.toFixed(2);
 
-            console.log(`X: ${x}, Y: ${y}, Z: ${z}`);
-        });
+                document.getElementById("x").textContent = x;
+                document.getElementById("y").textContent = y;
+                document.getElementById("z").textContent = z;
+
+                console.log(`X: ${x}, Y: ${y}, Z: ${z}`);
+            });
+
+            sensor.addEventListener("error", event => {
+                console.error("Sensor error:", event.error.name);
+                alert("Gyroskop API kunde inte startas. Prova en annan webbläsare eller aktivera sensorer i inställningar.");
+            });
+
+            sensor.start();
+        } catch (error) {
+            console.error("Gyroscope API kunde inte startas:", error);
+            alert("Gyroskop API stöds men kunde inte startas. Kontrollera webbläsarinställningar.");
+        }
     } else {
-        alert("DeviceOrientation API stöds inte i denna webbläsare.");
+        alert("Gyroskop API stöds inte i denna webbläsare.");
     }
 }
+
 
