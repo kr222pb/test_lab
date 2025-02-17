@@ -3,17 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gyroskop Test</title>
-    <script src="script.js" defer ></script>
+    <title>Geolocation API Test</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            margin: 50px;
+        }
+        button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #status {
+            font-weight: bold;
+            color: blue;
+        }
+    </style>
+    <script src="script.js" defer></script>
 </head>
 <body>
-    <h1>Gyroskop Test</h1>
-    <p>X: <span id="x">0</span></p>
-    <p>Y: <span id="y">0</span></p>
-    <p>Z: <span id="z">0</span></p>
-    <button id="startBtn">Starta sensorer</button>
+    <h1>Geolocation API - Hämta din position</h1>
+    <p><strong>Nuvarande position:</strong></p>
+    <p>Latitud: <span id="latitude">N/A</span></p>
+    <p>Longitud: <span id="longitude">N/A</span></p>
+    <p id="status">Tryck på en knapp för att hämta din position.</p>
     
+    <button onclick="getCurrentLocation()">Hämta enstaka position</button>
+    <button onclick="startTracking()">Börja spåra</button>
+    <button onclick="stopTracking()">Stoppa spårning</button>
 </body>
 </html>
-
-
