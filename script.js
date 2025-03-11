@@ -1,45 +1,48 @@
-function init() {
+document.addEventListener("DOMContentLoaded", function () {
     const button = document.querySelector("#startBtn");
-    if (button) {
-        button.addEventListener("click", requestPermission);
-    } else {
-        console.error("Knappen #startBtn hittades inte!");
-    }
-}
 
-window.addEventListener("load", init);
+    if (!button) {
+        console.error("Knappen #startBtn hittades inte!");
+        return;
+    }
+
+    button.addEventListener("click", requestPermission);
+});
 
 function requestPermission() {
-    if (typeof DeviceMotionEvent.requestPermission === 'function') {
-        DeviceMotionEvent.requestPermission()
+    if (typeof DeviceOrientationEvent.requestPermission === "function") {
+        DeviceOrientationEvent.requestPermission()
             .then(permissionState => {
-                if (permissionState === 'granted') {
+                if (permissionState === "granted") {
                     startGyro();
                 } else {
                     alert("Tillstånd nekades. Gyroskop fungerar inte.");
                 }
             })
-            .catch(console.error);
+            .catch(error => {
+                console.error("Fel vid tillståndsförfrågan:", error);
+            });
     } else {
-        startGyro();
+        startGyro(); // För enheter som inte kräver särskilt tillstånd
     }
 }
 
 function startGyro() {
-    if (window.DeviceOrientationEvent) {
-        window.addEventListener("deviceorientation", event => {
-            let x = event.beta !== null ? event.beta.toFixed(2) : "N/A"; // X - Framåt/Bakåt
-            let y = event.gamma !== null ? event.gamma.toFixed(2) : "N/A"; // Y - Vänster/Höger
-            let z = event.alpha !== null ? event.alpha.toFixed(2) : "N/A"; // Z - Rotation (Kompass)
-
-            document.getElementById("x").textContent = x;
-            document.getElementById("y").textContent = y;
-            document.getElementById("z").textContent = z;
-
-            console.log(`X: ${x}, Y: ${y}, Z: ${z}`);
-        });
+    if ("DeviceOrientationEvent" in window) {
+        window.addEventListener("deviceorientation", updateGyroData);
     } else {
         alert("DeviceOrientation API stöds inte i denna webbläsare.");
     }
 }
 
+function updateGyroData(event) {
+    const x = event.beta !== null ? event.beta.toFixed(2) : "N/A"; // Framåt/Bakåt
+    const y = event.gamma !== null ? event.gamma.toFixed(2) : "N/A"; // Vänster/Höger
+    const z = event.alpha !== null ? event.alpha.toFixed(2) : "N/A"; // Rotation
+
+    document.getElementById("x").textContent = x;
+    document.getElementById("y").textContent = y;
+    document.getElementById("z").textContent = z;
+
+    console.log(`X: ${x}, Y: ${y}, Z: ${z}`);
+}
