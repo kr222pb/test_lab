@@ -1,40 +1,44 @@
-let gamepadIndex = null;
+function init() {
+    document.querySelector("#startBtn").addEventListener("click", requestPermission);
+}
 
-// Lyssna på när en gamepad ansluts
-window.addEventListener("gamepadconnected", (event) => {
-    gamepadIndex = event.gamepad.index;
-    document.getElementById("status").textContent = `Gamepad ansluten: ${event.gamepad.id}`;
-    updateGamepad();
-});
+window.addEventListener("load", init);
 
-// Lyssna på när en gamepad kopplas bort
-window.addEventListener("gamepaddisconnected", () => {
-    document.getElementById("status").textContent = "Gamepad frånkopplad.";
-    document.getElementById("gamepadInfo").textContent = "Ingen gamepad upptäckt";
-    gamepadIndex = null;
-});
-
-// Funktion som uppdaterar gamepad-data varje frame
-function updateGamepad() {
-    if (gamepadIndex === null) return; // Om ingen gamepad är ansluten, avsluta
-
-    let gamepads = navigator.getGamepads();
-    let gp = gamepads[gamepadIndex];
-
-    if (gp) {
-        let info = `ID: ${gp.id}\n\nKnappstatus:\n`;
-
-        // Loopar genom alla knappar
-        for (let i = 0; i < gp.buttons.length; i++) {
-            info += `Knapp ${i}: ${gp.buttons[i].pressed ? "TRYCKT" : "Släppt"}\n`;
-        }
-
-        // Loopar genom alla axlar (joysticks)
-        info += `\nJoystick (vänster): X=${gp.axes[0].toFixed(2)}, Y=${gp.axes[1].toFixed(2)}\n`;
-        info += `Joystick (höger): X=${gp.axes[2].toFixed(2)}, Y=${gp.axes[3].toFixed(2)}\n`;
-
-        document.getElementById("gamepadInfo").textContent = info;
+function requestPermission() {
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission()
+            .then(permissionState => {
+                if (permissionState === 'granted') {
+                    startGyro();
+                } else {
+                    alert("Tillstånd nekades. Gyroskop fungerar inte.");
+                }
+            })
+            .catch(console.error);
+    } else {
+        // Om det inte är en iOS-enhet, starta direkt
+        startGyro();
     }
+}
 
-    requestAnimationFrame(updateGamepad); // Anropa funktionen igen nästa frame
+function startGyro() {
+    if ('Gyroscope' in window) {
+        let sensor = new Gyroscope({ frequency: 60 });
+
+        sensor.addEventListener('reading', () => {
+            let x = sensor.x.toFixed(2);
+            let y = sensor.y.toFixed(2);
+            let z = sensor.z.toFixed(2);
+
+            document.getElementById('x').textContent = x;
+            document.getElementById('y').textContent = y;
+            document.getElementById('z').textContent = z;
+
+            console.log(`X: ${x}, Y: ${y}, Z: ${z}`);
+        });
+
+        sensor.start();
+    } else {
+        alert("Gyroskop API stöds inte i denna webbläsare.");
+    }
 }
