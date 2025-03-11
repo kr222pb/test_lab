@@ -1,10 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
     const button = document.getElementById("startBtn");
+    const box = document.getElementById("box");
 
     if (!button) return;
 
     button.addEventListener("click", function () {
-        // Kolla om enheten kräver tillstånd (gäller iOS)
         if (typeof DeviceOrientationEvent.requestPermission === "function") {
             DeviceOrientationEvent.requestPermission()
                 .then(permissionState => {
@@ -14,23 +14,30 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
                 .catch(console.error);
         } else {
-            // För Android och webbläsare som inte kräver tillstånd
             startOrientationSensor();
         }
     });
+
+    function startOrientationSensor() {
+        if ("DeviceOrientationEvent" in window) {
+            window.addEventListener("deviceorientation", event => {
+                const x = event.beta !== null ? event.beta.toFixed(2) : "N/A"; // Framåt/Bakåt
+                const y = event.gamma !== null ? event.gamma.toFixed(2) : "N/A"; // Vänster/Höger
+                const z = event.alpha !== null ? event.alpha.toFixed(2) : "N/A"; // Rotation (kompass)
+
+                document.getElementById("x").textContent = x;
+                document.getElementById("y").textContent = y;
+                document.getElementById("z").textContent = z;
+
+                // Rotera boxen baserat på gamma (Y) och beta (X)
+                box.style.transform = `rotateX(${x}deg) rotateY(${y}deg)`;
+            });
+        } else {
+            alert("DeviceOrientation API stöds inte i denna webbläsare.");
+        }
+    }
 });
 
-function startOrientationSensor() {
-    if ("DeviceOrientationEvent" in window) {
-        window.addEventListener("deviceorientation", event => {
-            document.getElementById("x").textContent = event.beta !== null ? event.beta.toFixed(2) : "N/A"; // Framåt/Bakåt
-            document.getElementById("y").textContent = event.gamma !== null ? event.gamma.toFixed(2) : "N/A"; // Vänster/Höger
-            document.getElementById("z").textContent = event.alpha !== null ? event.alpha.toFixed(2) : "N/A"; // Rotation (kompass)
-        });
-    } else {
-        alert("DeviceOrientation API stöds inte i denna webbläsare.");
-    }
-}
 
 // function startGyro() {
 //     if ("Gyroscope" in window) {
